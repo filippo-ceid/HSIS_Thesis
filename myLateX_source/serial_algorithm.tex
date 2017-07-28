@@ -1,0 +1,124 @@
+\begin{algorithm}[H]
+    \caption{\ \ \ Σειριακός Υπολογισμός Καταχωρητών Διαμόρφωσης}
+    \label{alg:serial}
+    \begin{algorithmic}[1]
+        \begin{footnotesize}
+            \Statex
+            
+            \Statex
+            \begin{center}
+                \textit{\textbf{Περιγραφή Μεταβλητών και Συναρτήσεων}}
+            \end{center}
+            
+            \Statex
+            \begin{description}[leftmargin=8em,style=nextline]
+                \item [$SetsNumber$] Πλήθος συνόλων
+                \item [$WaysNumber$] Πλήθος τμημάτων
+                \item [$FaultMaps$] Θέσεις σφαλμάτων στη μνήμη (διεύθυνση συνόλου, τμήμα)
+                \item [$S$] Αποδεκτές τιμές Καταχωρητών Διαμόρφωσης
+                \item [$FB_{w}$] Διευθύνσεις ελαττωματικών πλαισίων στο τμήμα - \en{w}
+                \item [$XFB_{w}$] Διευθύνσεις ελαττωματικών πλαισίων στο τμήμα - \en{w} μετά την εφαρμογή της νέας τιμής στον Καταχωρητή Διαμόρφωσης - \en{w}
+                \item [$FS_{k}$] Διευθύνσεις λογικών συνόλων με \en{k} ελαττωματικά πλαίσια, μεταξύ των τμημάτων που έχουν συμμετάσχει έως το τρέχον βήμα του αλγορίθμου
+                \item [$CCR$] Υποψήφιες τιμές του ελεγχόμενου Καταχωρητή Διαμόρφωσης μετά από κάθε βήμα του αλγορίθμου
+                \item [$CR_{w}$] Τελική τιμή του Καταχωρητή Διαμόρφωσης - \en{w}
+                \item [$COUNTER{[Y]}$] Μετρητές επανάληψης αποτελεσμάτων \en{Y} των λογικών πράξεων \xor\\ ($Y=0 \Rightarrow COUNTER[0]++$)
+                \item[$elements(A)$] Συνάρτηση εύρεσης πλήθους στοιχείων του διανύσματος \en{A}
+                \item[$minimum(A)$] Συνάρτηση εύρεσης μικρότερου στοιχείου του διανύσματος \en{A}
+                \item[$random(A)$] Συνάρτηση τυχαίας επιλογής στοιχείου από το διάνυσμα \en{A}
+            \end{description}
+            
+            \begin{center}
+                \hrulefill
+            \end{center}
+            
+            \selectlanguage{english}
+            \Procedure {SerialPermutation}{$SetsNumber$, $WaysNumber$, $FaultMaps$}
+                
+                \\
+                \State \Comment {\gr{Αρχικοποίηση}}
+                \State $ maxAddress = SetsNumber - 1 $;
+                \State $ S = \{ x\in \mathbb{R}, 0\le x\le maxAddress \} $;
+                
+                \\
+                \For {$w = 0$ to $WaysNumber - 1$}
+                    \State $ FB_{w} = \{ \textit{\gr{ελαττωματικές θέσεις τμήματος} - w} \} $;
+                    \State $ XFB_{w} = \{ \emptyset \} $;
+                    \State $ CR_{w} = 0 $;
+                \EndFor
+                
+                \\
+                \For {$b = 0$ to $WaysNumber$}
+                    \State $ FS_{b} = \{ \emptyset \} $;
+                \EndFor
+                
+                \\
+                \State \linecomment{\gr{Αρχικά τα σύνολα με 1 ελαττωματικό πλαίσιο ταυτίζονται με αυτά του τμήματος 0}}
+                \State $ FS_{1} =  FB_{0} $;
+                \State $ FS_{0} =  S - FS_{1} $;
+                \\
+                %continue on next page
+                \algstore{serial_alg_part1}
+        \end{footnotesize}
+    \end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+    \ContinuedFloat
+    \caption{\ \ \ Σειριακός Υπολογισμός Καταχωρητών Διαμόρφωσης (Συνέχεια)}
+    \begin{algorithmic}[1]
+        \algrestore{serial_alg_part1}
+        \begin{footnotesize}
+            \selectlanguage{english}
+                \State \Comment {\gr{Βήματα υπολογισμού κατάλληλης τιμής για κάθε καταχωρητή} w}
+                \For {$w = 1$ to $WaysNumber - 1$}
+                    
+                    \State $ CCR = S $;
+                    \State $ b = w $;
+                    \While {$b > 0$}
+                        \If {$ elements(CCR) > 1 $}
+                            \\
+                            \State $ COUNTER\left[ 0 : maxAddress \right] = 0 $;
+                            \ForAll{$F_{R}$ in $FB_{w}$}
+                                \ForAll{$F_{L}$ in $FS_{B}$}
+                                    \State $ Y = F_{L} \oplus F_{R} $;
+                                    \State $ COUNTER\left[ Y \right] = COUNTER\left[ Y \right] + 1 $;
+                                \EndFor
+                            \EndFor
+                            \\
+                            \State $ CAND\_CNT = \{ \emptyset \} $;
+                            \ForAll{$CR$ in $CCR$}
+                                \State $ CAND\_CNT = CAND\_CNT \cup COUNTER\left[ CR \right] $;
+                            \EndFor
+                            \\
+                            \State $ MIN\_CNT = minimum(CAND\_CNT) $;
+                            \State $ NEW\_CCR = \{ \emptyset \} $;
+                            \ForAll{$CR$ in $CCR$}
+                                \If {$ COUNTER\left[ CR \right] = MIN\_CNT$}
+                                    \State $ NEW\_CCR = NEW\_CCR \cup CR $;
+                                \EndIf
+                            \EndFor
+                            \\
+                            \State $ CCR = NEW\_CCR $;
+                            \\
+                        \EndIf
+                        \State $ b = b - 1 $;
+                    \EndWhile
+                    \\
+                    \State $ CR_{w} = random(CCR) $;
+                    \\
+                    \ForAll{$F$ in $FB_{w}$}
+                        \State $ XFB_{w} = XFB_{w} \cup (F \oplus CR_{w}) $;
+                    \EndFor
+                    \\
+                    \State $ b = w + 1 $;
+                    \While {$b > 0$}
+                        \State $ FS_{b} = FS_{b} \cup (FS_{b-1} \cap XFB_{w}) $;
+                        \State $ FS_{b-1} = FS_{b-1} - FS_{b} $;
+                        \State $ b = b - 1 $;
+                    \EndWhile
+                    \\
+                \EndFor
+            \EndProcedure
+        \end{footnotesize}
+    \end{algorithmic}
+\end{algorithm}

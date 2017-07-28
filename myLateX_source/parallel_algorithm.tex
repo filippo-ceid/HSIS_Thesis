@@ -1,0 +1,183 @@
+\begin{algorithm}[H]
+    \captionsetup{}
+    \caption{\ \ \ Παράλληλος Υπολογισμός Καταχωρητών Διαμόρφωσης}
+    \label{alg:parallel}
+    \begin{algorithmic}[1]
+        \begin{footnotesize}
+            \Statex 
+            
+            \Statex 
+            \begin{center}
+                \textit{\textbf{Περιγραφή Μεταβλητών και Συναρτήσεων}}
+            \end{center}
+            
+            \Statex
+            \begin{description}[leftmargin=9em,style=nextline]
+                \item [$SetsNumber$] Πλήθος συνόλων
+                \item [$WaysNumber$] Πλήθος τμημάτων
+                \item [$FaultMaps$] Θέσεις σφαλμάτων στη μνήμη (διεύθυνση συνόλου, τμήμα)
+                \item [$S$] Αποδεκτές τιμές Καταχωρητών Διαμόρφωσης
+                \item [$FB_{w}$] Διευθύνσεις ελαττωματικών πλαισίων στο τμήμα - \en{w}
+                \item [$XFB_{w}$] Διευθύνσεις ελαττωματικών πλαισίων στο τμήμα - \en{w} μετά την εφαρμογή της νέας τιμής στον Καταχωρητή Διαμόρφωσης - \en{w}
+                \item [$FS_{[t,k]}$] Διευθύνσεις λογικών συνόλων με \en{k} ελαττωματικά πλαίσια, μεταξύ των τμημάτων που έχουν συμμετάσχει στο νήμα \en{t} έως το τρέχον βήμα του αλγορίθμου
+                \item [$CCR$] Υποψήφιες τιμές του ελεγχόμενου Καταχωρητή Διαμόρφωσης μετά από κάθε βήμα του αλγορίθμου
+                \item [$CR_{w}$] Τελική τιμή του Καταχωρητή Διαμόρφωσης - \en{w}
+                \item [$COUNTER{[X,Y]}$] Μετρητές επανάληψης αποτελεσμάτων \en{Y} των λογικών πράξεων \xor. Κάθε γραμμή του πίνακα έχει διαφορετική βαρύτητα. Η ανώτερη γραμμή (μικρότερη τιμή του \en{X}) έχει τη μικρότερη βαρύτητα, ενώ η κατώτερη γραμμή (μεγαλύτερη τιμή του \en{X}) τη μεγαλύτερη βαρύτητα, στην επιλογή τιμών για τους Καταχωρητές Διαμόρφωσης.\\
+                ($Y=0 \Rightarrow COUNTER[X,0]++$)
+                \item[$elements(A)$] Συνάρτηση εύρεσης πλήθους στοιχείων του διανύσματος \en{A}
+                \item[$minimum(A)$] Συνάρτηση εύρεσης μικρότερου στοιχείου του διανύσματος \en{A}
+                \item[$random(A)$] Συνάρτηση τυχαίας επιλογής στοιχείου από το διάνυσμα \en{A}
+            \end{description}
+            
+            \begin{center}
+                \hrulefill
+            \end{center}
+            
+            \selectlanguage{english}
+            \Procedure {ParallelPermutation}{$SetsNumber$, $WaysNumber$, $FaultMaps$}
+                \State \Comment {\gr{Αρχικοποίησης}}
+                \State $ maxAddress = SetsNumber - 1 $;
+                \State $ S = \{ x\in \mathbb{R}, 0\le x\le maxAddress \} $;
+                \State $parallelSteps = log2(WaysNumber) - 1$;
+                \State $threadsNumber = WaysNumber$;
+                
+                \\
+                \For {$w = 0$ to $WaysNumber - 1$}
+                    \State $ FB_{w} = \{ \textit{\gr{ελαττωματικά πλαίσια τμήματος}-w} \} $;
+                    \State $ XFB_{w} = \{ \emptyset \} $;
+                    \State $ CR_{w} = 0 $;
+                \EndFor
+                \For {$b = 0$ to $WaysNumber$}
+                    \State $ FS_{[w,b]} = \{ \emptyset \} $;
+                \EndFor
+                
+                \\
+                \State \linecomment{\gr{Αρχικά τα σύνολα του νήματος} k \gr{με 1 ελαττωματικό πλαίσιο ταυτίζονται με αυτά του τμήματος} k}
+                \State $ FS_{w,1} =  FB_{w} $;
+                \State $ FS_{w,0} =  S - FS_{w,1} $;
+                
+                %continue on next page
+                \algstore{parallel_alg_part1}
+        \end{footnotesize}
+    \end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+    \ContinuedFloat
+    \caption{\ \ \ Παράλληλος Υπολογισμός Καταχωρητών Διαμόρφωσης (Συνέχεια)}
+    \begin{algorithmic}[1]
+        \algrestore{parallel_alg_part1}
+        \begin{footnotesize}
+            \selectlanguage{english}
+                \State \Comment {\gr{Βήματα υπολογισμού κατάλληλης τιμής για κάθε καταχωρητή} w}
+                
+                \For {$pstep = 1$ to $parallelSteps$}
+                    \State $ threadWays = WaysNumber/threads $;
+                    \linecomment{\gr{πλήθος τμημάτων ανά νήμα}}
+                    
+                    \\
+                    \State \linecomment{\gr{Εκτέλεση συνάρτησης} XOR \gr{μεταξύ των νημάτων} t \gr{και} t+1. \gr{Η τιμή που εξάγεται}}
+                    \State \linecomment{\gr{μεταβάλει τις τιμές των καταχωρητών των τμημάτων που περιέχει το νήμα} t+1.}
+                    \For {$t = 0$ to $threadsNumber$ step $2$}
+                        \State $ COUNTER\left[0 : 2*threadWays, 0 : maxAddress \right] = 0 $;
+                        
+                        \\
+                        \For {$i = threadWays$ to $1$ step $-1$}
+                            \For {$j = threadWays$ to $1$ step $-1$}
+                                \State $ X = i + j $;
+                                \ForAll{$F_{R}$ in $FS_{[t,i]}$}
+                                    \ForAll{$F_{L}$ in $FS_{[t+1,j]}$}
+                                        \State $ Y = F_{L} \oplus F_{R} $;
+                                        \State $ COUNTER\left[N, Y \right] = COUNTER\left[X, Y \right] + 1 $;
+                                    \EndFor
+                                \EndFor
+                            \EndFor
+                        \EndFor
+                        
+                        \\
+                        \State \linecomment{\gr{Υπολογισμός του συνόλου υποψήφιων τιμών, κρατώντας σε κάθε επανάληψη αυτές}}
+                        \State \linecomment{\gr{με την ελάχιστη τιμή στη γραμμή} X \gr{του πίνακα. Η αναζήτηση ξεκινάει από την}}
+                        \State \linecomment{\gr{κατώτερη γραμμή η οποία έχει τη μεγαλύτερη βαρύτητα (στόχος είναι η μείωση}}
+                        \State \linecomment{\gr{των συνόλων που περιέχουν πολλά ελαττωματικά πλαίσια).}}
+                        \State $ CCR = S $;
+                        \For {$X = 2*threadWays$ to $2$ step $-1$}
+                            \If {$ elements(CCR) > 1 $}
+                                
+                                \\
+                                \State $ CAND\_CNT = \{ \emptyset \} $;
+                                \ForAll{$CR$ in $CCR$}
+                                    \State $ CAND\_CNT = CAND\_CNT \cup COUNTER\left[X, CR \right] $;
+                                \EndFor
+                                \State $ MIN\_CNT = minimum(CAND\_CNT) $;
+                                \State $ NEW\_CCR = \{ \emptyset \} $;
+                                \ForAll{$CR$ in $CCR$}
+                                    \If {$ COUNTER\left[X, CR \right] = MIN\_CNT$}
+                                        \State $ NEW\_CCR = NEW\_CCR \cup CR $;
+                                    \EndIf
+                                \EndFor
+                                
+                                \\
+                                \State $ CCR = NEW\_CCR $;
+                            \EndIf
+                        \EndFor
+                        
+                        \\
+                        \State $ TCR = random(CCR) $;
+                        \For {$w = (t+1)*threadWays$ to $(t+2)*threadWay - 1$}
+                            \State $ CR_{w} = CR_{w} \oplus TCR $;
+                        \EndFor
+                %continue on next page
+                \algstore{parallel_alg_part2}
+        \end{footnotesize}
+    \end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+    \ContinuedFloat
+    \caption{\ \ \ \gr{Παράλληλος Υπολογισμός Καταχωρητών Διαμόρφωσης (Συνέχεια)}}
+    \begin{algorithmic}[1]
+        \algrestore{parallel_alg_part2}
+        \begin{footnotesize}
+            \selectlanguage{english}
+                        \For {$w = threadWays$ to $0$ step $-1$}
+                            \State $ XFS = \{ \emptyset \} $;
+                            \ForAll{$F$ in $FS_{[t+1,w]}$}
+                                \State $ XFS = XFS \cup (F \oplus TCR) $;
+                            \EndFor
+                            $ FS_{[t+1,w]} = XFS $
+                        \EndFor
+                    \EndFor
+                    \ \linecomment{t = t + 2}
+                    
+                    \\
+                    \For {$t = 0$ to $threadsNumber$ step $2$}
+                        \For {$w = 2*threadWays$ to $0$ step $-1$}
+                            \State $ NFS = \{ \emptyset \} $;
+                        \EndFor
+                    
+                        \For {$i = threadWays$ to $0$ step $-1$}
+                            \For {$j = threadWays$ to $0$ step $-1$}
+                                \State $ X = i + j $;
+                                \State $ NFS_{X} = NFS_{X} \cup (FS_{[t,i]} \cap FS_{[t+1,j]}) $;
+                            \EndFor
+                        \EndFor
+                        
+                        \For {$w = 2*threadWays$ to $1$ step $-1$}
+                            $ FS_{[t/2,w]} = NFS_{w} $
+                        \EndFor
+                    \EndFor
+                    
+                    \State $threadsNumber = threadsNumber/2 $;
+                    
+                \EndFor
+                \ \linecomment{pstep = pstep + 1}
+                
+                \For {$w = 0$ to $WaysNumber$}
+                    \ForAll{$F$ in $FB_{w}$}
+                        \State $ XFB_{w} = XFB_{w} \cup (F \oplus CR_{w}) $;
+                    \EndFor
+                \EndFor
+            \EndProcedure
+        \end{footnotesize}
+    \end{algorithmic}
+\end{algorithm}
