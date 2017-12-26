@@ -177,7 +177,7 @@ function [] = sbitmaps(blocksize,btb_entries,associativity,pfails,btb_types,grou
                 elseif j == 2
                     fprintf(fname,'//Subitmap of Permutation BTB using 1 CR/way (1CR P-BTB) - pfail = %f\n',pfails(i));
                 else
-                    CRs = 2^(j-1);
+                    CRs = 2^(j-2);
                     fprintf(fname,'//Subitmap of Permutation BTB using %d CRs/way (%dCRs P-BTB) - pfail = %f\n',CRs,CRs,pfails(i));
                 end
                 fprintf(fname,'#include <stdio.h>\n');
